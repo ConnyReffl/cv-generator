@@ -1,0 +1,84 @@
+from flask import Flask, request, render_template, send_file
+from reportlab.pdfgen import canvas
+from reportlab.lib.pagesizes import LETTER
+import os
+
+app = Flask(__name__)
+
+# Funktion zum Erstellen des PDFs
+def create_cv_pdf(name, email, phone, linkedin, education, work_experience, skills, file_path):
+    c = canvas.Canvas(file_path, pagesize=LETTER)
+    width, height = LETTER
+
+    # Header
+    c.setFont("Helvetica-Bold", 16)
+    c.drawCentredString(width / 2, height - 50, name)
+
+    c.setFont("Helvetica", 12)
+    c.drawCentredString(width / 2, height - 70, f"Email: {email} | Phone: {phone}")
+    c.drawCentredString(width / 2, height - 90, f"LinkedIn: {linkedin}")
+
+    # Section: Education
+    y_position = height - 130
+    c.setFont("Helvetica-Bold", 14)
+    c.drawString(50, y_position, "EDUCATION")
+    c.setFont("Helvetica", 12)
+    y_position -= 20
+    for line in education.split("\n"):
+        c.drawString(50, y_position, line)
+        y_position -= 15
+
+    # Section: Work Experience
+    c.setFont("Helvetica-Bold", 14)
+    c.drawString(50, y_position - 10, "WORK EXPERIENCE")
+    c.setFont("Helvetica", 12)
+    y_position -= 30
+    for line in work_experience.split("\n"):
+        c.drawString(50, y_position, line)
+        y_position -= 15
+
+    # Section: Skills
+    c.setFont("Helvetica-Bold", 14)
+    c.drawString(50, y_position - 10, "SKILLS & CERTIFICATIONS")
+    c.setFont("Helvetica", 12)
+    y_position -= 30
+    for line in skills.split("\n"):
+        c.drawString(50, y_position, line)
+        y_position -= 15
+
+    # Save the PDF
+    c.save()
+
+@app.route("/", methods=["GET", "POST"])
+def index():
+    if request.method == "POST":
+        # Eingaben aus dem Formular
+        name = request.form["name"]
+        email = request.form["email"]
+        phone = request.form["phone"]
+        linkedin = request.form["linkedin"]
+        education = request.form["education"]
+        work_experience = request.form["work_experience"]
+        skills = request.form["skills"]
+
+        # Validierung der Eingaben
+        errors = []
+        if not name.strip():
+            errors.append("Der Name darf nicht leer sein.")
+        if "@" not in email or "." not in email:
+            errors.append("Bitte eine gültige E-Mail-Adresse eingeben.")
+        if not phone.isdigit() or len(phone) < 10:
+            errors.append("Bitte eine gültige Telefonnummer eingeben.")
+        if errors:
+            return render_template("index.html", errors=errors)
+
+        # Dynamischer Dateiname
+        file_path = f"{name.replace(' ', '_').lower()}_cv.pdf"
+        create_cv_pdf(name, email, phone, linkedin, education, work_experience, skills, file_path)
+
+        return send_file(file_path, as_attachment=True)
+
+    return render_template("index.html", errors=None)
+
+if __name__ == "__main__":
+    app.run(debug=True)

@@ -1,0 +1,37 @@
+import os
+from fpdf import FPDF
+from datetime import datetime
+
+try:
+    # Begrüßung
+    print("Willkommen zum Lebenslauf-Generator!")
+    
+    # Eingabe: Name
+    name = input("Dein voller Name: ")
+
+    # Speicherort vorbereiten
+    speicher_ordner = "lebenslaeufe"
+    os.makedirs(speicher_ordner, exist_ok=True)
+
+    # Dynamischer Dateiname (Name + Datum)
+    aktuelles_datum = datetime.now().strftime("%Y_%m_%d")
+    name_formatiert = name.replace(" ", "_")
+    pdf_dateiname = f"lebenslauf_{name_formatiert}_{aktuelles_datum}.pdf"
+    pdf_dateipfad = os.path.join(speicher_ordner, pdf_dateiname)
+
+    # PDF erstellen
+    pdf = FPDF()
+    pdf.add_page()
+    pdf.set_font("Arial", size=12)
+    
+    # PDF-Inhalt
+    pdf.cell(0, 10, "Lebenslauf", ln=True, align="C")
+    pdf.ln(10)
+    pdf.cell(0, 10, f"Name: {name}", ln=True)
+
+    # PDF speichern
+    pdf.output(pdf_dateipfad)
+    print(f"\nDein Lebenslauf wurde erfolgreich als '{pdf_dateiname}' im Ordner '{speicher_ordner}' gespeichert!")
+
+except Exception as e:
+    print(f"\nEin Fehler ist aufgetreten: {e}")
